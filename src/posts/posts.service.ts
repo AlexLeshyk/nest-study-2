@@ -4,8 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
 import { PostModel } from './entities/post.entity';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -13,12 +14,12 @@ export class PostsService {
     {
       title: '1',
       content: '1',
-      id: '1',
+      id: 1,
       meta: {
         createdAt: '02.02.2025',
         updatedAt: '',
       },
-      postImages: [
+      images: [
         {
           src: 'https://avatarzo.ru/wp-content/uploads/kolenok-na-plede.jpg',
           description: 'image',
@@ -28,12 +29,12 @@ export class PostsService {
     {
       title: '2',
       content: '2',
-      id: '2',
+      id: 2,
       meta: {
         createdAt: '03.02.2025',
         updatedAt: '',
       },
-      postImages: [
+      images: [
         {
           src: 'https://avatarzo.ru/wp-content/uploads/oduvanchik-na-solncze.jpg',
           description: 'image',
@@ -43,12 +44,12 @@ export class PostsService {
     {
       title: '3',
       content: '3',
-      id: '3',
+      id: 3,
       meta: {
         createdAt: '04.02.2025',
         updatedAt: '',
       },
-      postImages: [
+      images: [
         {
           src: 'https://avatarzo.ru/wp-content/uploads/kolenok-na-plede.jpg',
           description: 'image',
@@ -58,12 +59,12 @@ export class PostsService {
     {
       title: 'Title',
       content: '4',
-      id: '4',
+      id: 4,
       meta: {
         createdAt: '04.02.2025',
         updatedAt: '',
       },
-      postImages: [
+      images: [
         {
           src: 'https://avatarzo.ru/wp-content/uploads/oduvanchik-na-solncze.jpg',
           description: 'image',
@@ -78,12 +79,12 @@ export class PostsService {
       this.posts.push({
         title: createPostDto.title,
         content: createPostDto.content,
-        id: String(postsLength + 1),
+        id: postsLength + 1,
         meta: {
           createdAt: new Date().toLocaleDateString(),
           updatedAt: '',
         },
-        postImages: createPostDto.images,
+        images: createPostDto.images,
       });
     } catch (error) {
       throw new HttpException(
@@ -94,7 +95,7 @@ export class PostsService {
     }
   }
 
-  async findAll(): Promise<PostModel[]> {
+  findAll(): PostModel[] {
     try {
       return this.posts;
     } catch (error) {
@@ -107,7 +108,7 @@ export class PostsService {
   }
 
   findOne(id: number) {
-    const post = this.posts.find((item) => +item.id === id);
+    const post = this.posts.find((item) => item.id === id);
     if (!post) {
       throw new NotFoundException(`Not found post with id: ${id}`);
     }
@@ -116,17 +117,16 @@ export class PostsService {
 
   update(id: number, updatePostDto: UpdatePostDto): PostModel {
     try {
-      const post = this.findOne(+id);
+      const post = this.findOne(id);
+      console.log('post', post);
 
       const updatedPost: PostModel = {
         ...post,
-        title: updatePostDto.title || '',
-        content: updatePostDto.content || '',
-        postImages: updatePostDto.images,
+        ...updatePostDto,
         meta: { ...post.meta, updatedAt: new Date().toLocaleDateString() },
       };
       this.posts = this.posts.map((item) => {
-        return +item.id === id ? updatedPost : item;
+        return item.id === id ? updatedPost : item;
       });
       return updatedPost;
     } catch (err) {
@@ -137,15 +137,11 @@ export class PostsService {
   }
 
   remove(id: number) {
-    try {
-      const post = this.findOne(+id);
-      if (post) {
-        this.posts = this.posts.filter((item) => +item.id !== id);
-      }
-    } catch (err) {
-      throw new NotFoundException('Error deleting post. Post not founded.', {
-        cause: err,
-      });
+    const postIndex = this.posts.findIndex((post) => post.id === id);
+    if (postIndex !== -1) {
+      this.posts.splice(postIndex, 1);
+    } else {
+      throw new NotFoundException('Error deleting post. Post not founded.');
     }
   }
 }

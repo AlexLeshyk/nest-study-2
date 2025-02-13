@@ -28,7 +28,7 @@ export class PostImage {
 export class PostModel {
   /* The identifier of post */
   @ApiProperty({ example: 1, description: 'Post identifier' })
-  id: string;
+  id: number;
 
   @ApiProperty({ example: 'Title', description: 'Post title' })
   title: string;
@@ -43,10 +43,8 @@ export class PostModel {
   meta: MetaInfo;
 
   @ApiProperty({
-    example: {
-      array: [{ src: 'source of image', description: 'image description' }],
-    },
+    example: [{ src: 'source of image', description: 'image description' }],
     description: 'Array of images',
   })
-  postImages?: PostImage[];
+  images?: PostImage[];
 }
