@@ -8,64 +8,83 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ValidationPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto, UpdatePostDto } from './dto/post.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { PostModel } from './entities/post.entity';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { SearchPostDto } from './dto/search-post.dto';
 
 @ApiTags('posts')
-@Controller('posts')
+@ApiInternalServerErrorResponse({ description: 'Server Error' })
+@ApiUnauthorizedResponse({ description: 'Unauthorized response' })
+@Controller({ version: '1', path: 'posts' })
 export class PostsController {
   constructor(private postsService: PostsService) {}
 
-  @Post('create')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create new post' })
-  @ApiResponse({
-    status: 201,
+  @ApiCreatedResponse({
     description: 'The post has been successfully created.',
   })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
-  async create(@Body(new ValidationPipe()) createPostDto: CreatePostDto) {
-    this.postsService.create(createPostDto);
+  @ApiBadRequestResponse({ description: 'Bad Request' })
+  @ApiBody({ type: CreatePostDto })
+  create(@Body() createPostDto: CreatePostDto) {
+    return this.postsService.create(createPostDto);
   }
 
   @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiBadRequestResponse({ description: 'Bad Request' })
   @ApiOperation({ summary: 'Get all posts' })
-  async getPosts(): Promise<PostModel[]> {
+  getPosts() {
     return this.postsService.findAll();
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Find post with id' })
-  @ApiResponse({
-    status: 200,
+  @ApiParam({ name: 'id', description: 'Gets the post by id' })
+  @ApiOkResponse({
     description: 'The found post record',
     type: PostModel,
   })
-  getOnePost(@Param('id') id: string) {
+  @ApiNotFoundResponse({ description: 'Not Found' })
+  getPostById(@Param() { id }: SearchPostDto) {
     return this.postsService.findOne(+id);
   }
 
   @Patch(':id')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Update post with id' })
-  @ApiResponse({ status: 404, description: 'Not Found' })
-  update(
-    @Param('id') id: string,
-    @Body(new ValidationPipe()) post: UpdatePostDto,
-  ) {
+  @ApiParam({ name: 'id', description: 'Update the post by id' })
+  @ApiCreatedResponse({ description: 'Post has been updated' })
+  @ApiNotFoundResponse({ description: 'Not Found' })
+  update(@Param() { id }: SearchPostDto, @Body() post: UpdatePostDto) {
     return this.postsService.update(+id, post);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete post with id' })
-  @ApiResponse({ status: 404, description: 'Not Found' })
-  delete(@Param('id') id: string) {
+  @ApiParam({ name: 'id', description: 'Delete the post by id' })
+  @ApiNoContentResponse({ description: 'Post has been deleted' })
+  @ApiNotFoundResponse({ description: 'Not Found' })
+  delete(@Param() { id }: SearchPostDto) {
     return this.postsService.remove(+id);
   }
 }
