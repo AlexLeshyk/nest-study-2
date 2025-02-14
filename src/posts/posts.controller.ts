@@ -8,20 +8,20 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ValidationPipe,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import {
   ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
-  ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { PostModel } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -30,7 +30,7 @@ import { SearchPostDto } from './dto/search-post.dto';
 
 @ApiTags('posts')
 @ApiInternalServerErrorResponse({ description: 'Server Error' })
-@ApiForbiddenResponse({ description: 'Forbidden' })
+@ApiUnauthorizedResponse({ description: 'Unauthorized response' })
 @Controller({ version: '1', path: 'posts' })
 export class PostsController {
   constructor(private postsService: PostsService) {}
@@ -43,7 +43,7 @@ export class PostsController {
   })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   @ApiBody({ type: CreatePostDto })
-  create(@Body(new ValidationPipe()) createPostDto: CreatePostDto) {
+  create(@Body() createPostDto: CreatePostDto) {
     return this.postsService.create(createPostDto);
   }
 
@@ -58,6 +58,7 @@ export class PostsController {
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Find post with id' })
+  @ApiParam({ name: 'id', description: 'Gets the post by id' })
   @ApiOkResponse({
     description: 'The found post record',
     type: PostModel,
@@ -70,20 +71,20 @@ export class PostsController {
   @Patch(':id')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Update post with id' })
+  @ApiParam({ name: 'id', description: 'Update the post by id' })
+  @ApiCreatedResponse({ description: 'Post has been updated' })
   @ApiNotFoundResponse({ description: 'Not Found' })
-  update(
-    @Param('id') id: string,
-    @Body(new ValidationPipe()) post: UpdatePostDto,
-  ) {
+  update(@Param() { id }: SearchPostDto, @Body() post: UpdatePostDto) {
     return this.postsService.update(+id, post);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete post with id' })
-  @ApiNoContentResponse({ description: 'Post was deleted' })
+  @ApiParam({ name: 'id', description: 'Delete the post by id' })
+  @ApiNoContentResponse({ description: 'Post has been deleted' })
   @ApiNotFoundResponse({ description: 'Not Found' })
-  delete(@Param('id') id: string) {
+  delete(@Param() { id }: SearchPostDto) {
     return this.postsService.remove(+id);
   }
 }

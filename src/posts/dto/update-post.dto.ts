@@ -1,25 +1,24 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { CreatePostDto } from './create-post.dto';
 import { IsOptional } from 'class-validator';
 import { PostImage } from '../entities/post.entity';
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'title',
     description: 'Post title, optional parameter',
   })
   @IsOptional()
   title?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'content',
     description: 'Post content, optional parameter',
   })
   @IsOptional()
   content?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: [{ src: 'source of image', description: 'image description' }],
     description: 'Array of images, optional parameter',
   })

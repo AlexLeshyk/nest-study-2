@@ -6,7 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { logger } from './common/middleware/logger.middleware';
-import { VersioningType } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +14,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+  app.useGlobalPipes(new ValidationPipe());
   app.use(logger);
   const config = new DocumentBuilder()
     .setTitle('Innogram for InnoTrainee')

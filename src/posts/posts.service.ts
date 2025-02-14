@@ -118,7 +118,6 @@ export class PostsService {
   update(id: number, updatePostDto: UpdatePostDto): PostModel {
     try {
       const post = this.findOne(id);
-      console.log('post', post);
 
       const updatedPost: PostModel = {
         ...post,
