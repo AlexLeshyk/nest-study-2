@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty } from 'class-validator';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  CreateDateColumn,
+} from 'typeorm';
 
 export class MetaInfo {
   @ApiProperty({ example: 'Date', description: 'Post created date' })
@@ -9,41 +15,33 @@ export class MetaInfo {
   updatedAt?: string;
 }
 
-export class PostImage {
-  @ApiProperty({
-    example: 'source',
-    description: 'Image source',
-  })
-  @IsNotEmpty()
-  src: string;
-
-  @ApiProperty({
-    example: 'description',
-    description: 'Image description for alt',
-  })
-  description: string;
-}
-
-export class PostModel {
+@Entity()
+export class PostModel extends MetaInfo {
   /* The identifier of post */
   @ApiProperty({ example: 1, description: 'Post identifier' })
+  @PrimaryGeneratedColumn()
   id: number;
 
   @ApiProperty({ example: 'Title', description: 'Post title' })
+  @Column()
   title: string;
 
   @ApiProperty({ example: 'Body of content', description: 'Post content' })
+  @Column()
   content: string;
 
-  @ApiProperty({
-    example: { createdAt: '19.02.2025', updatedAt: '19.02.2025' },
-    description: 'Post meta info',
-  })
-  meta: MetaInfo;
+  @ApiProperty({ example: 'Date', description: 'Post created date' })
+  @CreateDateColumn()
+  createdAt: string;
+
+  @ApiProperty({ example: 'Date', description: 'Post updated date' })
+  @UpdateDateColumn()
+  updatedAt?: string;
 
   @ApiProperty({
-    example: [{ src: 'source of image', description: 'image description' }],
+    example: ['source of first image', 'source of second image'],
     description: 'Array of images',
   })
-  images?: PostImage[];
+  @Column({ type: 'text', array: true, default: [] })
+  images?: string[];
 }
