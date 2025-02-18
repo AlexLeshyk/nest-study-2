@@ -1,146 +1,61 @@
 import {
-  HttpException,
-  HttpStatus,
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PostModel } from './entities/post.entity';
+import { PostEntity } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class PostsService {
-  private posts: PostModel[] = [
-    {
-      title: '1',
-      content: '1',
-      id: 1,
-      meta: {
-        createdAt: '02.02.2025',
-        updatedAt: '',
-      },
-      images: [
-        {
-          src: 'https://avatarzo.ru/wp-content/uploads/kolenok-na-plede.jpg',
-          description: 'image',
-        },
-      ],
-    },
-    {
-      title: '2',
-      content: '2',
-      id: 2,
-      meta: {
-        createdAt: '03.02.2025',
-        updatedAt: '',
-      },
-      images: [
-        {
-          src: 'https://avatarzo.ru/wp-content/uploads/oduvanchik-na-solncze.jpg',
-          description: 'image',
-        },
-      ],
-    },
-    {
-      title: '3',
-      content: '3',
-      id: 3,
-      meta: {
-        createdAt: '04.02.2025',
-        updatedAt: '',
-      },
-      images: [
-        {
-          src: 'https://avatarzo.ru/wp-content/uploads/kolenok-na-plede.jpg',
-          description: 'image',
-        },
-      ],
-    },
-    {
-      title: 'Title',
-      content: '4',
-      id: 4,
-      meta: {
-        createdAt: '04.02.2025',
-        updatedAt: '',
-      },
-      images: [
-        {
-          src: 'https://avatarzo.ru/wp-content/uploads/oduvanchik-na-solncze.jpg',
-          description: 'image',
-        },
-      ],
-    },
-  ];
+  constructor(
+    @InjectRepository(PostEntity)
+    private postsRepository: Repository<PostEntity>,
+  ) {}
 
   create(createPostDto: CreatePostDto) {
-    const postsLength = this.posts.length;
-    try {
-      this.posts.push({
-        title: createPostDto.title,
-        content: createPostDto.content,
-        id: postsLength + 1,
-        meta: {
-          createdAt: new Date().toLocaleDateString(),
-          updatedAt: '',
-        },
-        images: createPostDto.images,
-      });
-    } catch (error) {
-      throw new HttpException(
-        'Error creating new post',
-        HttpStatus.BAD_REQUEST,
-        { cause: error },
-      );
-    }
+    const post = this.postsRepository.create(createPostDto);
+
+    return this.postsRepository.save(post);
   }
 
-  findAll(): PostModel[] {
-    try {
-      return this.posts;
-    } catch (error) {
-      throw new HttpException(
-        'This is a custom message',
-        HttpStatus.FORBIDDEN,
-        { cause: error },
-      );
-    }
+  findAll() {
+    return this.postsRepository.find();
   }
 
-  findOne(id: number) {
-    const post = this.posts.find((item) => item.id === id);
+  private async checkExistingPost(id: number) {
+    const post = await this.postsRepository.existsBy({ id });
+
     if (!post) {
-      throw new NotFoundException(`Not found post with id: ${id}`);
+      throw new NotFoundException(`Can't found post with id: ${id}`);
     }
-    return post;
+    return true;
   }
 
-  update(id: number, updatePostDto: UpdatePostDto): PostModel {
-    try {
-      const post = this.findOne(id);
-
-      const updatedPost: PostModel = {
-        ...post,
-        ...updatePostDto,
-        meta: { ...post.meta, updatedAt: new Date().toLocaleDateString() },
-      };
-      this.posts = this.posts.map((item) => {
-        return item.id === id ? updatedPost : item;
-      });
-      return updatedPost;
-    } catch (err) {
-      throw new HttpException('Error updating post', HttpStatus.BAD_REQUEST, {
-        cause: err,
-      });
-    }
+  async findOne(id: number) {
+    return this.postsRepository.findOneByOrFail({ id });
   }
 
-  remove(id: number) {
-    const postIndex = this.posts.findIndex((post) => post.id === id);
-    if (postIndex !== -1) {
-      this.posts.splice(postIndex, 1);
-    } else {
-      throw new NotFoundException('Error deleting post. Post not founded.');
+  async update(id: number, updatePostDto: UpdatePostDto) {
+    const post = await this.findOne(id);
+
+    const updatedPost = await this.postsRepository.preload({
+      ...post,
+      ...updatePostDto,
+    });
+
+    if (!updatedPost) {
+      throw new BadRequestException(`Can't update post with id: ${id}`);
     }
+
+    return this.postsRepository.save(updatedPost);
+  }
+
+  async remove(id: number) {
+    await this.checkExistingPost(id);
+    await this.postsRepository.delete(id);
   }
 }

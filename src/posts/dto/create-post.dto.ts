@@ -1,10 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
-import { PostImage, PostModel } from '../entities/post.entity';
+import { IsNotEmpty, IsString } from 'class-validator';
+import { PostEntity } from '../entities/post.entity';
 import { OmitType } from '@nestjs/mapped-types';
 
-export class CreatePostDto extends OmitType(PostModel, ['id', 'meta']) {
+export class CreatePostDto extends OmitType(PostEntity, [
+  'id',
+  'createdAt',
+  'updatedAt',
+]) {
   @ApiProperty({
     example: 'title example',
     description: 'post title',
@@ -22,10 +25,9 @@ export class CreatePostDto extends OmitType(PostModel, ['id', 'meta']) {
   content: string;
 
   @ApiProperty({
-    example: [{ src: 'source of image', description: 'image description' }],
+    example: ['source of first image', 'source of second image'],
     description: 'Array of images',
   })
-  @ValidateNested()
-  @Type(() => PostImage)
-  images?: PostImage[];
+  @IsNotEmpty()
+  images: string[];
 }
