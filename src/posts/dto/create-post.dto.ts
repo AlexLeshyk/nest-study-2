@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { PostModel } from '../entities/post.entity';
 import { OmitType } from '@nestjs/mapped-types';
 
@@ -28,6 +28,6 @@ export class CreatePostDto extends OmitType(PostModel, [
     example: ['source of first image', 'source of second image'],
     description: 'Array of images',
   })
-  @IsNotEmpty()
+  @IsOptional()
   images?: string[];
 }
