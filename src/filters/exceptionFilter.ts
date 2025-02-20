@@ -1,0 +1,28 @@
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
+import { EntityNotFoundError } from 'typeorm';
+
+@Catch(EntityNotFoundError)
+export class TypeOrmExceptionFilter implements ExceptionFilter {
+  catch(exception: EntityNotFoundError, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+
+    const status = HttpStatus.NOT_FOUND;
+    const message =
+      exception.message || 'The requested resource was not found.';
+
+    response.status(status).json({
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      message,
+    });
+  }
+}

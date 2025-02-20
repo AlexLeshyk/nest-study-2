@@ -7,6 +7,7 @@ import {
 import { AppModule } from './app.module';
 import { logger } from './common/middleware/logger.middleware';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { TypeOrmExceptionFilter } from './filters/exceptionFilter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalFilters(new TypeOrmExceptionFilter());
   app.use(logger);
   const config = new DocumentBuilder()
     .setTitle('Innogram for InnoTrainee')

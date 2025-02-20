@@ -23,7 +23,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { PostModel } from './entities/post.entity';
+import { PostEntity } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { SearchPostDto } from './dto/search-post.dto';
@@ -61,7 +61,7 @@ export class PostsController {
   @ApiParam({ name: 'id', description: 'Gets the post by id' })
   @ApiOkResponse({
     description: 'The found post record',
-    type: PostModel,
+    type: PostEntity,
   })
   @ApiNotFoundResponse({ description: 'Not Found' })
   getPostById(@Param() { id }: SearchPostDto) {

@@ -1,7 +1,6 @@
 import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { CreatePostDto } from './create-post.dto';
 import { IsOptional } from 'class-validator';
-import { PostImage } from '../entities/post.entity';
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {
   @ApiPropertyOptional({
@@ -19,9 +18,9 @@ export class UpdatePostDto extends PartialType(CreatePostDto) {
   content?: string;
 
   @ApiPropertyOptional({
-    example: [{ src: 'source of image', description: 'image description' }],
-    description: 'Array of images, optional parameter',
+    example: ['source of image one', 'source of image one'],
+    description: 'Array of images source, optional parameter',
   })
   @IsOptional()
-  images?: PostImage[];
+  images?: string[];
 }
