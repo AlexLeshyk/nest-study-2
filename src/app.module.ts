@@ -11,12 +11,19 @@ import databaseConfig from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        url: configService.get('DATABASE_URL'),
-        type: 'postgres',
-        autoLoadEntities: true,
-        synchronize: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+        return {
+          // url: configService.get('DATABASE_URL'),
+          host: configService.get('DB_HOST'), // Use 'db' for Docker
+          port: configService.get('DB_PORT'),
+          username: configService.get('DB_USER'),
+          password: configService.get('DB_PASSWORD'),
+          database: configService.get('DB_NAME'),
+          type: 'postgres',
+          autoLoadEntities: true,
+          synchronize: true,
+        };
+      },
       inject: [ConfigService],
     }),
     PostsModule,
