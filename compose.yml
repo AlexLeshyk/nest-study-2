@@ -1,0 +1,71 @@
+   
+services:
+  # The NestJS application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PORT=${PORT}
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  # The PostgreSQL database
+  db:
+    image: postgres
+    container_name: postgres-db
+    restart: unless-stopped
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+      - db-data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      - DB_PORT=${DB_PORT}
+    ports:
+      - "${DB_PORT}:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+  pgadmin:
+    container_name: pgadmin-container
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "pgadmin4@pgadmin.org"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+    networks:
+      - app-network
+volumes:
+  db-data:
+  pgadmin-data:
+networks:
+  app-network:
+    driver: bridge
