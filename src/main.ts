@@ -22,7 +22,7 @@ async function bootstrap() {
     .setTitle('Innogram for InnoTrainee')
     .setDescription('API description for application Innogram for InnoTrainee')
     .setVersion('1.0')
-    .addTag('API methods')
+    .addTag('API methods!')
     .build();
   const options: SwaggerDocumentOptions = {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
