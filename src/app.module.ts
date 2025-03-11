@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PostsModule } from './posts/posts.module';
+import { CommentsModule } from './comments/comments.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import databaseConfig from './config/database.config';
@@ -26,6 +27,7 @@ import databaseConfig from './config/database.config';
       inject: [ConfigService],
     }),
     PostsModule,
+    CommentsModule,
   ],
   providers: [],
 })

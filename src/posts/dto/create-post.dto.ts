@@ -9,20 +9,12 @@ export class CreatePostDto extends OmitType(PostEntity, [
   'updatedAt',
 ]) {
   @ApiProperty({
-    example: 'title example',
-    description: 'post title',
-  })
-  @IsString()
-  @IsNotEmpty()
-  title: string;
-
-  @ApiProperty({
     example: 'content example',
     description: 'post content',
   })
   @IsString()
   @IsNotEmpty()
-  content: string;
+  caption: string;
 
   @ApiProperty({
     example: ['source of first image', 'source of second image'],
