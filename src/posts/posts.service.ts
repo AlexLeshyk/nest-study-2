@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PostEntity } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -26,7 +22,7 @@ export class PostsService {
     return this.postsRepository.find();
   }
 
-  private async checkExistingPost(id: number) {
+  private async checkExistingPost(id: string) {
     const post = await this.postsRepository.existsBy({ id });
 
     if (!post) {
@@ -35,11 +31,11 @@ export class PostsService {
     return true;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return this.postsRepository.findOneByOrFail({ id });
   }
 
-  async update(id: number, updatePostDto: UpdatePostDto) {
+  async update(id: string, updatePostDto: UpdatePostDto) {
     const post = await this.findOne(id);
 
     const updatedPost = await this.postsRepository.preload({
@@ -48,13 +44,13 @@ export class PostsService {
     });
 
     if (!updatedPost) {
-      throw new BadRequestException(`Can't update post with id: ${id}`);
+      throw new NotFoundException(`Can't update post with id: ${id}`);
     }
 
     return this.postsRepository.save(updatedPost);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     await this.checkExistingPost(id);
     await this.postsRepository.delete(id);
   }

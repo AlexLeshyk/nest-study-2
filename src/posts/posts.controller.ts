@@ -65,7 +65,7 @@ export class PostsController {
   })
   @ApiNotFoundResponse({ description: 'Not Found' })
   getPostById(@Param() { id }: SearchPostDto) {
-    return this.postsService.findOne(+id);
+    return this.postsService.findOne(id);
   }
 
   @Patch(':id')
@@ -75,7 +75,7 @@ export class PostsController {
   @ApiCreatedResponse({ description: 'Post has been updated' })
   @ApiNotFoundResponse({ description: 'Not Found' })
   update(@Param() { id }: SearchPostDto, @Body() post: UpdatePostDto) {
-    return this.postsService.update(+id, post);
+    return this.postsService.update(id, post);
   }
 
   @Delete(':id')
@@ -85,6 +85,6 @@ export class PostsController {
   @ApiNoContentResponse({ description: 'Post has been deleted' })
   @ApiNotFoundResponse({ description: 'Not Found' })
   delete(@Param() { id }: SearchPostDto) {
-    return this.postsService.remove(+id);
+    return this.postsService.remove(id);
   }
 }
