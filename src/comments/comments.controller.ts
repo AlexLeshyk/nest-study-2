@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -30,11 +31,13 @@ import { CommentEntity } from './entities/comment.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { QueryCommentDto } from './dto/query-comment.dto';
 import { SearchCommentDto } from './dto/search-comment.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @ApiTags('comments')
 @ApiInternalServerErrorResponse({ description: 'Server Error' })
 @ApiUnauthorizedResponse({ description: 'Unauthorized response' })
 @Controller({ version: '1', path: 'comments' })
+@UseGuards(AuthGuard)
 export class CommentsController {
   constructor(private commentsService: CommentsService) {}
 

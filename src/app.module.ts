@@ -4,11 +4,13 @@ import { CommentsModule } from './comments/comments.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import databaseConfig from './config/database.config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       load: [databaseConfig],
+      isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -28,6 +30,7 @@ import databaseConfig from './config/database.config';
     }),
     PostsModule,
     CommentsModule,
+    AuthModule,
   ],
   providers: [],
 })
