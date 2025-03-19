@@ -8,18 +8,13 @@ import { UserEntity } from 'src/users/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { TokenEntity } from './entities/token.entity';
-import * as crypto from 'crypto';
 import * as bcrypt from 'bcryptjs';
+import { TokenService } from 'src/tokens/token.service';
 
 interface JwtPayload {
   username: string;
   email: string;
   sub: string;
-}
-
-interface DecodedRefreshToken {
-  refresh_token: string;
 }
 
 export interface AccessToken {
@@ -31,54 +26,19 @@ export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    @InjectRepository(TokenEntity)
-    private readonly tokenRepository: Repository<TokenEntity>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly tokenService: TokenService,
   ) {}
 
-  private generateRefreshToken(): string {
-    return crypto.randomBytes(64).toString('hex');
-  }
-
-  private async storeRefreshToken(
-    user: UserEntity,
-    refreshToken: string,
-    expiresAt: Date,
-  ): Promise<void> {
-    const token = this.tokenRepository.create({
-      refreshToken,
-      user,
-      expiresAt,
-    });
-    await this.tokenRepository.save(token);
-  }
-
-  private validateRefreshToken(token: string) {
-    let decodedRefreshToken: DecodedRefreshToken;
-
-    try {
-      decodedRefreshToken = this.jwtService.verify(token, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      throw new Error('Invalid to decode refresh token');
-    }
-
-    return decodedRefreshToken.refresh_token;
-  }
-
   async refreshAccessToken(refreshToken: string) {
-    const originalRefreshToken = this.validateRefreshToken(refreshToken);
+    const originalRefreshToken =
+      this.tokenService.validateRefreshToken(refreshToken);
 
-    const token = await this.tokenRepository.findOne({
-      where: { refreshToken: originalRefreshToken },
-      relations: ['user'],
-    });
+    const token = await this.tokenService.findToken(originalRefreshToken);
 
-    if (!token || token.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
+    if (token.expiresAt < new Date()) {
+      throw new UnauthorizedException('Expired refresh token');
     }
 
     const payload: JwtPayload = {
@@ -88,16 +48,13 @@ export class AuthService {
     };
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-      expiresIn: '20m',
+      expiresIn: '15m',
     });
 
     return { access_token };
   }
 
-  async signIn(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string; refresh_token: string }> {
+  async signIn(email: string, password: string) {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException('User not found');
@@ -115,14 +72,14 @@ export class AuthService {
     };
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-      expiresIn: '20m',
+      expiresIn: '15m',
     });
 
-    const refresh_token = this.generateRefreshToken();
+    const refresh_token = this.tokenService.generateRefreshToken();
     const expiresAt = new Date();
     expiresAt.setMonth(expiresAt.getMonth() + 1);
 
-    await this.storeRefreshToken(user, refresh_token, expiresAt);
+    await this.tokenService.storeRefreshToken(user, refresh_token, expiresAt);
 
     const refresh_token_signed = this.jwtService.sign(
       { refresh_token },
@@ -161,15 +118,9 @@ export class AuthService {
   }
 
   async signOut(refreshToken: string) {
-    const originalRefreshToken = this.validateRefreshToken(refreshToken);
-    const token = await this.tokenRepository.findOneOrFail({
-      where: { refreshToken: originalRefreshToken },
-      relations: ['user'],
-    });
-
-    if (token) {
-      await this.tokenRepository.remove(token);
-    }
+    const originalRefreshToken =
+      this.tokenService.validateRefreshToken(refreshToken);
+    await this.tokenService.deleteToken(originalRefreshToken);
     return 'Logged out successfully';
   }
 }

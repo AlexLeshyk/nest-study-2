@@ -3,7 +3,7 @@ import { PostEntity } from 'src/posts/entities/post.entity';
 import { BaseEntity } from 'src/entities/base-entity';
 import { CommentEntity } from 'src/comments/entities/comment.entity';
 import { ApiProperty } from '@nestjs/swagger';
-import { TokenEntity } from 'src/auth/entities/token.entity';
+import { TokenEntity } from 'src/tokens/entities/token.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity extends BaseEntity {

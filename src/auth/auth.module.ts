@@ -5,8 +5,9 @@ import { UserEntity } from 'src/users/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { TokenEntity } from './entities/token.entity';
+import { TokenEntity } from 'src/tokens/entities/token.entity';
 import { AuthService } from './auth.service';
+import { TokenModule } from 'src/tokens/token.module';
 
 @Module({
   imports: [
@@ -15,8 +16,9 @@ import { AuthService } from './auth.service';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_ACCESS_SECRET,
-      signOptions: { expiresIn: '20m' },
+      signOptions: { expiresIn: '15m' },
     }),
+    TokenModule,
   ],
   providers: [AuthService, GoogleStrategy],
   controllers: [AuthController],
