@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,8 +11,9 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { TokenService } from 'src/tokens/token.service';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
-interface JwtPayload {
+export interface JwtPayload {
   username: string;
   email: string;
   sub: string;
@@ -34,17 +36,19 @@ export class AuthService {
   async refreshAccessToken(refreshToken: string) {
     const originalRefreshToken =
       this.tokenService.validateRefreshToken(refreshToken);
-
-    const token = await this.tokenService.findToken(originalRefreshToken);
-
-    if (token.expiresAt < new Date()) {
+    const tokenFromDb = await this.tokenService.findToken(refreshToken);
+    if (
+      !originalRefreshToken ||
+      !tokenFromDb ||
+      tokenFromDb.expiresAt < new Date()
+    ) {
       throw new UnauthorizedException('Expired refresh token');
     }
 
     const payload: JwtPayload = {
-      email: token.user.email,
-      username: token.user.username,
-      sub: token.user.id,
+      email: tokenFromDb.user.email,
+      username: tokenFromDb.user.username,
+      sub: tokenFromDb.user.id,
     };
     const access_token = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
@@ -76,11 +80,6 @@ export class AuthService {
     });
 
     const refresh_token = this.tokenService.generateRefreshToken();
-    const expiresAt = new Date();
-    expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-    await this.tokenService.storeRefreshToken(user, refresh_token, expiresAt);
-
     const refresh_token_signed = this.jwtService.sign(
       { refresh_token },
       {
@@ -88,39 +87,43 @@ export class AuthService {
         expiresIn: '30d',
       },
     );
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    await this.tokenService.storeRefreshToken(
+      user,
+      refresh_token_signed,
+      access_token,
+      expiresAt,
+    );
 
     return { access_token, refresh_token: refresh_token_signed };
   }
 
-  async signUp(
-    username: string,
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-  ) {
+  async signUp(createUserDto: CreateUserDto) {
+    const { email, password } = createUserDto;
+
     const newUser = await this.userRepository.findOne({ where: { email } });
 
     if (newUser) {
-      throw new Error(`User with such ${email} alredy exists`);
+      throw new BadRequestException(`User with such ${email} alredy exists`);
     }
 
     const hashPassword = await bcrypt.hash(password, 4);
 
     const user = this.userRepository.create({
-      username,
-      email,
+      ...createUserDto,
       password: hashPassword,
-      firstName,
-      lastName,
     });
     return this.userRepository.save(user);
   }
 
   async signOut(refreshToken: string) {
-    const originalRefreshToken =
-      this.tokenService.validateRefreshToken(refreshToken);
-    await this.tokenService.deleteToken(originalRefreshToken);
-    return 'Logged out successfully';
+    try {
+      await this.tokenService.deleteToken(refreshToken);
+      return 'Logged out successfully';
+    } catch {
+      throw new BadRequestException('Error invalidating refresh token');
+    }
   }
 }

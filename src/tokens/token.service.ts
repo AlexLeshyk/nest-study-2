@@ -31,8 +31,7 @@ export class TokenService {
       decodedRefreshToken = this.jwtService.verify(token, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
@@ -42,10 +41,12 @@ export class TokenService {
   async storeRefreshToken(
     user: UserEntity,
     refreshToken: string,
+    accessToken: string,
     expiresAt: Date,
   ) {
     const token = this.tokenRepository.create({
       refreshToken,
+      accessToken,
       user,
       expiresAt,
     });

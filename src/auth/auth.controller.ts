@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -21,8 +22,8 @@ import {
 import { AuthService } from './auth.service';
 import { UserSignInDto } from './dto/user-sign-in.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Response } from 'express';
+import { COOKIE_MAX_AGE } from 'src/constants/constants';
 
 interface IUserRequest {
   user: {
@@ -66,12 +67,18 @@ export class AuthController {
     @Body() { email, password }: UserSignInDto,
     @Res() res: Response,
   ) {
-    const userData = await this.authService.signIn(email, password);
-    res.cookie('refresh_token', userData.refresh_token, {
-      httpOnly: true,
-      maxAge: 3600 * 30 * 24 * 1000,
-    });
-    return res.json(userData);
+    try {
+      const userData = await this.authService.signIn(email, password);
+      res.cookie('refresh_token', userData.refresh_token, {
+        httpOnly: true,
+        maxAge: COOKIE_MAX_AGE,
+      });
+      return res.json({ access_token: userData.access_token });
+    } catch {
+      throw new BadRequestException(
+        'Login failed. Please check your credentials.',
+      );
+    }
   }
 
   @Post('signup')
@@ -81,17 +88,8 @@ export class AuthController {
     description: 'The user has been successfully registered & created.',
   })
   @ApiBadRequestResponse({ description: 'Bad Request' })
-  signUp(
-    @Body()
-    { username, email, password, firstName, lastName }: CreateUserDto,
-  ) {
-    return this.authService.signUp(
-      username,
-      email,
-      password,
-      firstName,
-      lastName,
-    );
+  signUp(@Body() createUserDto: CreateUserDto) {
+    return this.authService.signUp(createUserDto);
   }
 
   @Post('signout')
@@ -102,12 +100,12 @@ export class AuthController {
   })
   @ApiBadRequestResponse({ description: 'Bad Request' })
   async logout(
-    @Body() { refresh_token }: RefreshTokenDto,
+    @Body() { refresh_token }: { refresh_token: string },
     @Res() res: Response,
   ) {
-    const refreshToken = await this.authService.signOut(refresh_token);
+    await this.authService.signOut(refresh_token);
     res.clearCookie('refresh_token');
-    return res.json(refreshToken);
+    return res.json({ message: 'Logged out successfully' });
   }
 
   @Post('refresh-token')
@@ -117,7 +115,9 @@ export class AuthController {
     description: 'The access token has been successfully refreshed.',
   })
   @ApiBadRequestResponse({ description: 'Bad Request' })
-  async refreshAccessToken(@Body() { refresh_token }: RefreshTokenDto) {
+  async refreshAccessToken(
+    @Body() { refresh_token }: { refresh_token: string },
+  ) {
     return this.authService.refreshAccessToken(refresh_token);
   }
 }

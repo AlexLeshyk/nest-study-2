@@ -15,8 +15,12 @@ export class TokenEntity {
   id: string;
 
   @ApiProperty({ description: 'Refresh token' })
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'text' })
   refreshToken: string;
+
+  @ApiProperty({ description: 'Access token' })
+  @Column({ type: 'varchar', length: 255 })
+  accessToken: string;
 
   @ApiProperty({ description: 'User who owns this token' })
   @ManyToOne(() => UserEntity, (user) => user.tokens)

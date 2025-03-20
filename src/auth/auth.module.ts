@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TokenEntity } from 'src/tokens/entities/token.entity';
 import { AuthService } from './auth.service';
 import { TokenModule } from 'src/tokens/token.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { TokenModule } from 'src/tokens/token.module';
     }),
     TokenModule,
   ],
-  providers: [AuthService, GoogleStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy],
   controllers: [AuthController],
   exports: [AuthService],
 })

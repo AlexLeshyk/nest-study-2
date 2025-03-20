@@ -28,13 +28,13 @@ import { PostEntity } from './entities/post.entity';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { SearchPostDto } from './dto/search-post.dto';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @ApiTags('posts')
 @ApiInternalServerErrorResponse({ description: 'Server Error' })
 @ApiUnauthorizedResponse({ description: 'Unauthorized response' })
 @Controller({ version: '1', path: 'posts' })
-@UseGuards(AuthGuard)
+@UseGuards(JwtAuthGuard)
 export class PostsController {
   constructor(private postsService: PostsService) {}
 
