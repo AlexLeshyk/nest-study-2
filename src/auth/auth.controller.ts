@@ -10,7 +10,6 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -22,13 +21,14 @@ import {
 import { AuthService } from './auth.service';
 import { UserSignInDto } from './dto/user-sign-in.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { COOKIE_MAX_AGE } from 'src/constants/constants';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 
-interface IUserRequest {
+export interface CustomRequest extends Request {
   user: {
-    username: string;
     email: string;
+    username: string;
   };
 }
 
@@ -39,20 +39,25 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
-  async googleAuth() {}
+  @UseGuards(GoogleAuthGuard)
+  googleAuth(@Req() req: CustomRequest) {
+    console.log(req.user);
+  }
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleAuthRedirect(@Req() req: IUserRequest) {
-    const { username, email } = req.user;
+  @UseGuards(GoogleAuthGuard)
+  googleAuthRedirect(@Req() req: CustomRequest, @Res() res: Response) {
+    const user = req.user;
+    const { email } = user;
 
-    if (!username || !email) {
-      console.log('Google OAuth callback did not return username or email');
+    if (!email) {
+      console.log('Google OAuth callback did not return email');
       return;
     }
 
-    return { message: 'Google authentication successful' };
+    console.log(res.json(user));
+
+    res.json(user);
   }
 
   @Post('signin')

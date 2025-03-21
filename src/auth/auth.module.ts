@@ -9,10 +9,12 @@ import { TokenEntity } from 'src/tokens/entities/token.entity';
 import { AuthService } from './auth.service';
 import { TokenModule } from 'src/tokens/token.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import googleOauthConfig from './config/google-oauth.config';
+import { UsersService } from 'src/users/users.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forFeature(googleOauthConfig),
     TypeOrmModule.forFeature([UserEntity, TokenEntity]),
     JwtModule.register({
       global: true,
@@ -21,7 +23,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     TokenModule,
   ],
-  providers: [AuthService, GoogleStrategy, JwtStrategy],
+  providers: [AuthService, GoogleStrategy, JwtStrategy, UsersService],
   controllers: [AuthController],
   exports: [AuthService],
 })

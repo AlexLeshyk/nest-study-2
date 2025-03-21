@@ -12,6 +12,8 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { TokenService } from 'src/tokens/token.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { UsersService } from 'src/users/users.service';
+import { CreateGoogleUserDto } from '../users/dto/create-google-user.dto';
 
 export interface JwtPayload {
   username: string;
@@ -28,6 +30,7 @@ export class AuthService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly tokenService: TokenService,
@@ -125,5 +128,12 @@ export class AuthService {
     } catch {
       throw new BadRequestException('Error invalidating refresh token');
     }
+  }
+
+  async validateGoogleUser(googleUser: CreateGoogleUserDto) {
+    const user = await this.usersService.findByEmail(googleUser.email);
+    console.log('user', user);
+    if (user) return user;
+    return await this.usersService.create(googleUser);
   }
 }
